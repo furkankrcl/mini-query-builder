@@ -30,10 +30,10 @@ describe("mini-orm", () => {
   });
   it("should generate select query with where clause and relations", () => {
     const query = selectQuery(Pet, {
-      where: { id: 1 },
+      where: { id: 1, birthDate: "2020-01-01" },
     });
     expect(query).toMatchInlineSnapshot(`
-      "SELECT pets.id AS pets_id, pets.name AS pets_name, pets.birth_date AS pets_birth_date FROM pets pets  WHERE pets.id = 1"
+      "SELECT pets.id AS pets_id, pets.name AS pets_name, pets.birth_date AS pets_birth_date FROM pets pets  WHERE pets.id = 1 AND pets.birth_date = '2020-01-01'"
     `);
   });
 
@@ -87,7 +87,20 @@ describe("mini-orm", () => {
 
     const query = updateQuery(Pet, pet);
     expect(query).toMatchInlineSnapshot(
-      `"UPDATE pets SET id = 2, name = 'Boncuk'"`
+      `"UPDATE pets SET id = 2, name = 'Boncuk' "`
+    );
+  });
+
+  it("should generate select query with advanced where clause", () => {
+    const query = selectQuery(Pet, {
+      where: {
+        id: { $gt: 1 },
+        name: { $like: "%Boncuk%" },
+        birthDate: { $null: true },
+      },
+    });
+    expect(query).toMatchInlineSnapshot(
+      `"SELECT pets.id AS pets_id, pets.name AS pets_name, pets.birth_date AS pets_birth_date FROM pets pets  WHERE pets.id > 1 AND pets.name LIKE '%Boncuk%' AND pets.birth_date IS NULL"`
     );
   });
 });

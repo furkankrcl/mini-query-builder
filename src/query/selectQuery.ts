@@ -1,10 +1,23 @@
 import { metadataStorage } from "../storage/MetadataStorage";
+import { buildWhereClause } from "./whereClause";
 
 export function selectQuery<T extends { new (...args: any[]): {} }>(
   entityClass: T,
   options?: {
     where?: Partial<{
-      [K in keyof InstanceType<T>]: InstanceType<T>[K];
+      [K in keyof InstanceType<T>]:
+        | InstanceType<T>[K]
+        | {
+            $eq?: InstanceType<T>[K];
+            $gt?: InstanceType<T>[K];
+            $lt?: InstanceType<T>[K];
+            $gte?: InstanceType<T>[K];
+            $lte?: InstanceType<T>[K];
+            $not?: InstanceType<T>[K];
+            $like?: string;
+            $null?: boolean;
+            $in?: InstanceType<T>[K][];
+          };
     }>;
     relations?: string[];
   }
@@ -54,16 +67,11 @@ export function selectQuery<T extends { new (...args: any[]): {} }>(
   const columns = [...baseColumns, ...joinColumns];
 
   // WHERE clause
-  let whereClause = "";
-  if (options?.where) {
-    const conditions = Object.entries(options.where).map(([key, value]) => {
-      if (typeof value === "string") {
-        return `${alias}.${key} = '${value}'`;
-      }
-      return `${alias}.${key} = ${value}`;
-    });
-    whereClause = `WHERE ${conditions.join(" AND ")}`;
-  }
+  const whereClause = buildWhereClause<InstanceType<T>>(
+    table,
+    false,
+    options?.where
+  );
 
   const query = `SELECT ${columns.join(", ")} FROM ${
     table.name

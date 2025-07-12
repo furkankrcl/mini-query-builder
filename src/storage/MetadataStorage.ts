@@ -52,6 +52,18 @@ class MetadataStorage {
     }
     return table;
   }
+
+  getColumnByPropertyKey(
+    tableName: string,
+    propertyKey: string
+  ): ColumnMetadata | undefined {
+    for (const table of this.tables.values()) {
+      if (table.name === tableName) {
+        return table.columns.find((col) => col.propertyKey === propertyKey);
+      }
+    }
+    return undefined;
+  }
 }
 
 export const metadataStorage = new MetadataStorage();

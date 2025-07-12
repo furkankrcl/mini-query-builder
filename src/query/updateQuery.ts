@@ -1,4 +1,5 @@
 import { metadataStorage } from "../storage/MetadataStorage";
+import { buildWhereClause } from "./whereClause";
 
 export function updateQuery<T extends { new (...args: any[]): {} }>(
   entityClass: T,
@@ -27,18 +28,7 @@ export function updateQuery<T extends { new (...args: any[]): {} }>(
     updates.push(`${column.name} = ${formatted}`);
   }
 
-  let whereClause = "";
+  const whereClause = buildWhereClause(table, true, options?.where);
 
-  if (options?.where) {
-    const whereParts = Object.entries(options.where).map(([key, value]) => {
-      const columnMeta = table.columns.find((col) => col.propertyKey === key);
-      if (!columnMeta) throw new Error(`Column '${key}' not found`);
-      const val = typeof value === "number" ? value : `'${value}'`;
-      return `${columnMeta.name} = ${val}`;
-    });
-
-    whereClause = ` WHERE ${whereParts.join(" AND ")}`;
-  }
-
-  return `UPDATE ${table.name} SET ${updates.join(", ")}${whereClause}`;
+  return `UPDATE ${table.name} SET ${updates.join(", ")} ${whereClause}`;
 }
