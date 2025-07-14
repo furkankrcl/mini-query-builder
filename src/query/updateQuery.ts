@@ -7,28 +7,30 @@ export function updateQuery<T extends { new (...args: any[]): {} }>(
   options?: {
     where?: Partial<InstanceType<T>>;
   }
-): string {
+): { query: string; params: any[] } {
   const table = metadataStorage.getTable(entityClass);
 
   if (!table) {
     throw new Error("Table metadata not found for the given entity.");
   }
 
-  const updates: string[] = [];
+  const updates: { clause: string; value: any[] }[] = [];
 
   for (const column of table.columns) {
     if (!(column.propertyKey in data)) continue;
     const value = (data as any)[column.propertyKey];
-    const formatted =
-      value === undefined || value === null
-        ? "NULL"
-        : typeof value === "string"
-        ? `'${value}'`
-        : value;
-    updates.push(`${column.name} = ${formatted}`);
+    updates.push({
+      clause: `${column.name} = ?`,
+      value: [value ?? null],
+    });
   }
 
   const whereClause = buildWhereClause(table, true, options?.where);
 
-  return `UPDATE ${table.name} SET ${updates.join(", ")} ${whereClause}`;
+  return {
+    query: `UPDATE ${table.name} SET ${updates
+      .map((u) => u.clause)
+      .join(", ")}${whereClause.query}`,
+    params: [...updates.flatMap((u) => u.value), ...whereClause.params],
+  };
 }

@@ -21,7 +21,7 @@ export function selectQuery<T extends { new (...args: any[]): {} }>(
     }>;
     relations?: string[];
   }
-): string {
+): { query: string; params: any[] } {
   const table = metadataStorage.getTable(entityClass);
   const alias = table.name; // alias olarak da tablo adını kullanıyoruz
 
@@ -67,7 +67,7 @@ export function selectQuery<T extends { new (...args: any[]): {} }>(
   const columns = [...baseColumns, ...joinColumns];
 
   // WHERE clause
-  const whereClause = buildWhereClause<InstanceType<T>>(
+  const { query: whereClause, params } = buildWhereClause<InstanceType<T>>(
     table,
     false,
     options?.where
@@ -76,5 +76,5 @@ export function selectQuery<T extends { new (...args: any[]): {} }>(
   const query = `SELECT ${columns.join(", ")} FROM ${
     table.name
   } ${alias} ${joinClauses.join(" ")} ${whereClause}`;
-  return query.trim();
+  return { query: query.trim(), params };
 }

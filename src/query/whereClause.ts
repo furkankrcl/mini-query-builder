@@ -1,25 +1,26 @@
 import { TableMetadata } from "../storage/MetadataStorage";
 
-function formatValue(val: any): string {
-  if (val === null) return "NULL";
-  if (typeof val === "string") return `'${val}'`;
-  return `${val}`;
-}
-
 export function buildWhereClause<T>(
   table: TableMetadata,
   hideAlias = false,
   where?: Partial<Record<keyof T, any>>
-): string {
-  if (!where) return "";
+): { query: string; params: any[] } {
+  if (!where) return { query: "", params: [] };
+
   const alias = hideAlias ? "" : `${table.name}.`;
-  const conditions = Object.entries(where).map(([propertyKey, value]) => {
+  const conditions: string[] = [];
+  const params: any[] = [];
+
+  for (const [propertyKey, value] of Object.entries(where)) {
     const columnMeta = table.columns.find(
       (col) => col.propertyKey === propertyKey
     );
     const columnName = columnMeta?.name || propertyKey;
+
     if (typeof value !== "object" || value === null) {
-      return `${alias}${columnName} = ${formatValue(value)}`;
+      conditions.push(`${alias}${columnName} = ?`);
+      params.push(value ?? null);
+      continue;
     }
 
     const operator = Object.keys(value)[0];
@@ -27,28 +28,53 @@ export function buildWhereClause<T>(
 
     switch (operator) {
       case "$eq":
-        return `${alias}${columnName} = ${formatValue(operand)}`;
+        conditions.push(`${alias}${columnName} = ?`);
+        params.push(operand);
+        break;
       case "$gt":
-        return `${alias}${columnName} > ${formatValue(operand)}`;
+        conditions.push(`${alias}${columnName} > ?`);
+        params.push(operand);
+        break;
       case "$lt":
-        return `${alias}${columnName} < ${formatValue(operand)}`;
+        conditions.push(`${alias}${columnName} < ?`);
+        params.push(operand);
+        break;
       case "$like":
-        return `${alias}${columnName} LIKE ${formatValue(operand)}`;
+        conditions.push(`${alias}${columnName} LIKE ?`);
+        params.push(operand);
+        break;
       case "$in":
-        return `${alias}${columnName} IN (${(operand as any[])
-          .map(formatValue)
-          .join(", ")})`;
+        conditions.push(
+          `${alias}${columnName} IN (${(operand as any[])
+            .map(() => "?")
+            .join(", ")})`
+        );
+        params.push(...operand);
+        break;
       case "$null":
-        return `${alias}${columnName} IS ${operand ? "" : "NOT "}NULL`;
+        conditions.push(
+          `${alias}${columnName} IS ${operand ? "" : "NOT "}NULL`
+        );
+        break;
       case "$gte":
-        return `${alias}${columnName} >= ${formatValue(operand)}`;
+        conditions.push(`${alias}${columnName} >= ?`);
+        params.push(operand);
+        break;
       case "$lte":
-        return `${alias}${columnName} <= ${formatValue(operand)}`;
+        conditions.push(`${alias}${columnName} <= ?`);
+        params.push(operand);
+        break;
       case "$not":
-        return `${alias}${columnName} != ${formatValue(operand)}`;
+        conditions.push(`${alias}${columnName} != ?`);
+        params.push(operand);
+        break;
       default:
         throw new Error(`Unsupported operator: ${operator}`);
     }
-  });
-  return `WHERE ${conditions.join(" AND ")}`;
+  }
+
+  return {
+    query: conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "",
+    params,
+  };
 }
