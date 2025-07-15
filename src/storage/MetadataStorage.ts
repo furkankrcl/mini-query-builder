@@ -1,6 +1,10 @@
 export interface ColumnMetadata {
   propertyKey: string;
   name: string;
+  transformer?: {
+    to(value: any): any; // TS → DB
+    from(value: any): any; // DB → TS
+  };
 }
 
 export interface RelationMetadata {
@@ -33,9 +37,14 @@ class MetadataStorage {
     }
   }
 
-  addColumn(target: Function, propertyKey: string, name: string) {
+  addColumn(
+    target: Function,
+    propertyKey: string,
+    name: string,
+    transformer?: ColumnMetadata["transformer"]
+  ) {
     const columns = this.tmpTableColumns.get(target) ?? [];
-    columns.push({ propertyKey, name });
+    columns.push({ propertyKey, name, transformer });
     this.tmpTableColumns.set(target, columns);
   }
 

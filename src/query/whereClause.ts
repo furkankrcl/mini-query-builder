@@ -15,11 +15,20 @@ export function buildWhereClause<T>(
     const columnMeta = table.columns.find(
       (col) => col.propertyKey === propertyKey
     );
+    const transformer = (val: any) => {
+      if (val === undefined || val === null) {
+        return null;
+      }
+      if (!columnMeta?.transformer) {
+        return val;
+      }
+      return columnMeta.transformer.to(val);
+    };
     const columnName = columnMeta?.name || propertyKey;
 
     if (typeof value !== "object" || value === null) {
       conditions.push(`${alias}${columnName} = ?`);
-      params.push(value ?? null);
+      params.push(transformer(value ?? null));
       continue;
     }
 
@@ -29,15 +38,15 @@ export function buildWhereClause<T>(
     switch (operator) {
       case "$eq":
         conditions.push(`${alias}${columnName} = ?`);
-        params.push(operand);
+        params.push(transformer(operand));
         break;
       case "$gt":
         conditions.push(`${alias}${columnName} > ?`);
-        params.push(operand);
+        params.push(transformer(operand));
         break;
       case "$lt":
         conditions.push(`${alias}${columnName} < ?`);
-        params.push(operand);
+        params.push(transformer(operand));
         break;
       case "$like":
         conditions.push(`${alias}${columnName} LIKE ?`);
@@ -49,7 +58,7 @@ export function buildWhereClause<T>(
             .map(() => "?")
             .join(", ")})`
         );
-        params.push(...operand);
+        params.push(...operand.map(transformer));
         break;
       case "$null":
         conditions.push(
@@ -58,17 +67,22 @@ export function buildWhereClause<T>(
         break;
       case "$gte":
         conditions.push(`${alias}${columnName} >= ?`);
-        params.push(operand);
+        params.push(transformer(operand));
         break;
       case "$lte":
         conditions.push(`${alias}${columnName} <= ?`);
-        params.push(operand);
+        params.push(transformer(operand));
         break;
       case "$not":
         conditions.push(`${alias}${columnName} != ?`);
-        params.push(operand);
+        params.push(transformer(operand));
         break;
       default:
+        if (columnMeta?.transformer) {
+          conditions.push(`${alias}${columnName} = ?`);
+          params.push(transformer(value));
+          break;
+        }
         throw new Error(`Unsupported operator: ${operator}`);
     }
   }

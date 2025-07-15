@@ -6,6 +6,7 @@ import { Pet } from "./__fixtures__/Pet";
 import { insertQuery, metadataStorage } from "../src";
 import { Reminder } from "./__fixtures__/Reminder";
 import { updateQuery } from "../src/query/updateQuery";
+import { CommoTypes } from "./__fixtures__/CommoTypes";
 
 describe("mini-orm", () => {
   it("should generate basic select query without relations", () => {
@@ -136,5 +137,73 @@ describe("mini-orm", () => {
     expect(reminder.reminderDate).toBe(row.reminders_reminder_date);
     // expect(reminder.pet).toBeInstanceOf(Pet);
     // expect(reminder.pet.id).toBe(row.pet_id);
+  });
+
+  it("should apply transformer on insertQuery", () => {
+    const pet = new CommoTypes();
+    pet.numberArr = [1, 2];
+    pet.stringArr = ["a", "b"];
+    pet.objCol = {
+      a: "a",
+      b: 1,
+      c: true,
+    };
+
+    const { query, params } = insertQuery(pet);
+    // Soru işareti sayısı ile kolon sayısı eşit mi kontrol et
+    const columnCount = query.match(/\(([^)]+)\)/)?.[1].split(",").length || 0;
+    const questionMarkCount = (query.match(/\?/g) || []).length;
+    expect(questionMarkCount).toBe(columnCount);
+
+    expect(query).toContain("number_arr");
+    expect(query).toContain("string_arr");
+    expect(query).toContain("obj_col");
+    expect(params).include(JSON.stringify(pet.numberArr));
+    expect(params).include(JSON.stringify(pet.stringArr));
+    expect(params).include(JSON.stringify(pet.objCol));
+  });
+
+  it("should apply transformer on updateQuery", () => {
+    const entity = new CommoTypes();
+    entity.numberArr = [1, 2];
+    entity.stringArr = ["a", "b"];
+    entity.objCol = {
+      a: "a",
+      b: 1,
+      c: true,
+    };
+
+    const whereNumberArr = [1, 3];
+
+    const { query, params } = updateQuery(CommoTypes, entity, {
+      where: { numberArr: whereNumberArr },
+    });
+
+    expect(query).toContain("number_arr");
+    expect(query).toContain("string_arr");
+    expect(query).toContain("obj_col");
+    expect(params[0]).toEqual(JSON.stringify(entity.numberArr));
+    expect(params[1]).toEqual(JSON.stringify(entity.stringArr));
+    expect(params[2]).toEqual(JSON.stringify(entity.objCol));
+    expect(params[3]).toEqual(JSON.stringify(whereNumberArr));
+  });
+
+  it("should apply transformer on toModel", () => {
+    const expectedEntity = new CommoTypes();
+    expectedEntity.numberArr = [1, 2];
+    expectedEntity.stringArr = ["a", "b"];
+    expectedEntity.objCol = {
+      a: "a",
+      b: 1,
+      c: true,
+    };
+    const row = {
+      _number_arr: JSON.stringify(expectedEntity.numberArr),
+      _string_arr: JSON.stringify(expectedEntity.stringArr),
+      _obj_col: JSON.stringify(expectedEntity.objCol),
+    };
+
+    const entity = CommoTypes.toModel(row, "_");
+    expect(expectedEntity).toEqual(entity);
   });
 });

@@ -14,7 +14,9 @@ export abstract class BaseEntity {
     for (const column of table.columns) {
       const key = `${colPrefix}${column.name}`;
       if (key in row) {
-        (instance as any)[column.propertyKey] = row[key];
+        (instance as any)[column.propertyKey] = column.transformer
+          ? column.transformer.from(row[key])
+          : row[key];
       }
     }
 

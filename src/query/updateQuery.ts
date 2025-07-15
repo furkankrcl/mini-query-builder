@@ -18,7 +18,8 @@ export function updateQuery<T extends { new (...args: any[]): {} }>(
 
   for (const column of table.columns) {
     if (!(column.propertyKey in data)) continue;
-    const value = (data as any)[column.propertyKey];
+    let value = (data as any)[column.propertyKey];
+    value = column.transformer ? column.transformer.to(value) : value;
     updates.push({
       clause: `${column.name} = ?`,
       value: [value ?? null],
