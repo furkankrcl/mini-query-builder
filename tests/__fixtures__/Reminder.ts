@@ -1,8 +1,8 @@
-import { Column, ManyToOne, Table } from "../../src";
+import { BaseEntity, Column, ManyToOne, Table } from "../../src";
 import { Pet } from "./Pet";
 
 @Table({ name: "reminders" })
-export class Reminder {
+export class Reminder extends BaseEntity {
   @Column({ name: "id" })
   id: number;
 

@@ -49,6 +49,15 @@ describe("mini-orm", () => {
     `);
   });
 
+  it("should generate select query with many-to-one relation", () => {
+    const { query } = selectQuery(Reminder, {
+      relations: ["pet"],
+    });
+    expect(query).toMatchInlineSnapshot(`
+      "SELECT reminders.id AS reminders_id, reminders.pet_id AS reminders_pet_id, reminders.reminder_date AS reminders_reminder_date, pets.id AS pet_id, pets.name AS pet_name, pets.birth_date AS pet_birth_date FROM reminders reminders LEFT JOIN pets ON reminders.pet_id = pets.id"
+    `);
+  });
+
   it("should generate insert query from entity", () => {
     const pet = new Pet();
     pet.id = 1;
@@ -108,5 +117,24 @@ describe("mini-orm", () => {
       `"SELECT pets.id AS pets_id, pets.name AS pets_name, pets.birth_date AS pets_birth_date FROM pets pets   WHERE pets.id > ? AND pets.name LIKE ? AND pets.birth_date IS NULL"`
     );
     expect(params).toEqual([1, "%Boncuk%"]);
+  });
+
+  it("should map row data to ReminderEntity using toModel", () => {
+    const row = {
+      reminders_id: 1,
+      reminders_pet_id: 123,
+      reminders_reminder_date: "2024-01-01T00:00:00.000Z",
+      reminder_pet_id: 123,
+      pet_id: 123,
+    };
+
+    const reminder = Reminder.toModel(row);
+
+    expect(reminder).toBeInstanceOf(Reminder);
+    expect(reminder.id).toBe(row.reminders_id);
+    expect(reminder.petId).toBe(row.reminders_pet_id);
+    expect(reminder.reminderDate).toBe(row.reminders_reminder_date);
+    // expect(reminder.pet).toBeInstanceOf(Pet);
+    // expect(reminder.pet.id).toBe(row.pet_id);
   });
 });
