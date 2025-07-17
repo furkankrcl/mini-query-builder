@@ -8,6 +8,7 @@ export * from "./decorators/ManyToOne";
 export * from "./query/selectQuery";
 export * from "./query/insertQuery";
 export * from "./query/updateQuery";
+export * from "./query/deleteQuery";
 export * from "./storage/MetadataStorage";
 
 export * from "./core/BaseEntity";
