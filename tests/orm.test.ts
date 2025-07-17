@@ -7,6 +7,7 @@ import { insertQuery, metadataStorage } from "../src";
 import { Reminder } from "./__fixtures__/Reminder";
 import { updateQuery } from "../src/query/updateQuery";
 import { CommoTypes } from "./__fixtures__/CommoTypes";
+import { deleteQuery } from "../src/query/deleteQuery";
 
 describe("mini-orm", () => {
   it("should generate basic select query without relations", () => {
@@ -205,5 +206,11 @@ describe("mini-orm", () => {
 
     const entity = CommoTypes.toModel(row, "_");
     expect(expectedEntity).toEqual(entity);
+  });
+
+  it("should generate delete query with where clause", () => {
+    const { query, params } = deleteQuery(Pet, { where: { id: 1 } });
+    expect(query).toMatchInlineSnapshot(`"DELETE FROM pets WHERE id = ?"`);
+    expect(params).toEqual([1]);
   });
 });
