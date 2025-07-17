@@ -1,7 +1,7 @@
 {
   "name": "mini-query-builder",
   "version": "1.0.0",
-  "description": "",
+  "description": "Generate simple SQL queries.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,10 +9,32 @@
     "test": "vitest",
     "build": "tsup src/index.ts --format cjs --dts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "sql",
+    "query",
+    "builder",
+    "orm",
+    "typescript"
+  ],
+  "author": "furkankrcl",
+  "license": "MIT",
   "type": "commonjs",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/furkankrcl/mini-query-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/furkankrcl/mini-query-builder/issues"
+  },
+  "homepage": "https://github.com/furkankrcl/mini-query-builder#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "devDependencies": {
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",
