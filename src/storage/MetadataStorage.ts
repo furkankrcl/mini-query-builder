@@ -5,6 +5,8 @@ export interface ColumnMetadata {
     to(value: any): any; // TS → DB
     from(value: any): any; // DB → TS
   };
+  excludeFromUpdate?: boolean;
+  excludeFromInsert?: boolean;
 }
 
 export interface RelationMetadata {
@@ -41,10 +43,18 @@ class MetadataStorage {
     target: Function,
     propertyKey: string,
     name: string,
-    transformer?: ColumnMetadata["transformer"]
+    transformer?: ColumnMetadata["transformer"],
+    excludeFromUpdate = false,
+    excludeFromInsert = false
   ) {
     const columns = this.tmpTableColumns.get(target) ?? [];
-    columns.push({ propertyKey, name, transformer });
+    columns.push({
+      propertyKey,
+      name,
+      transformer,
+      excludeFromUpdate,
+      excludeFromInsert,
+    });
     this.tmpTableColumns.set(target, columns);
   }
 
