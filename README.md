@@ -100,7 +100,7 @@ npm run test
 
 ## 🛠 Development
 
-This project is written in TypeScript and optimized for use in both backend and frontend environments.
+This project is written in TypeScript and optimized for use in both backend and mobile (e.g., React Native) environments.
 
 ## 📄 License
 

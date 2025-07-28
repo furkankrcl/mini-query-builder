@@ -21,22 +21,22 @@ describe("mini-orm", () => {
   it("should register OneToMany relation in metadataStorage", () => {
     const table = metadataStorage.getTable(Pet);
     expect(table.relations).toEqual([
-      {
+      expect.objectContaining({
         type: "OneToMany",
         propertyKey: "reminders",
         selfReference: "id",
         targetTable: "reminders",
         targetColumn: "pet_id",
-        targetClass: Reminder,
-      },
+      }),
     ]);
+    expect(table.relations?.[0].targetClass?.()).toBe(Reminder);
   });
   it("should generate select query with where clause and relations", () => {
     const { query, params } = selectQuery(Pet, {
       where: { id: 1, birthDate: "2020-01-01" },
     });
     expect(query).toMatchInlineSnapshot(`
-      "SELECT pets.id AS pets_id, pets.name AS pets_name, pets.birth_date AS pets_birth_date FROM pets pets   WHERE pets.id = ? AND pets.birth_date = ?"
+      "SELECT pets.id AS pets_id, pets.name AS pets_name, pets.birth_date AS pets_birth_date FROM pets pets WHERE pets.id = ? AND pets.birth_date = ?"
     `);
 
     expect(params).toEqual([1, "2020-01-01"]);
@@ -116,7 +116,7 @@ describe("mini-orm", () => {
       },
     });
     expect(query).toMatchInlineSnapshot(
-      `"SELECT pets.id AS pets_id, pets.name AS pets_name, pets.birth_date AS pets_birth_date FROM pets pets   WHERE pets.id > ? AND pets.name LIKE ? AND pets.birth_date IS NULL"`
+      `"SELECT pets.id AS pets_id, pets.name AS pets_name, pets.birth_date AS pets_birth_date FROM pets pets WHERE pets.id > ? AND pets.name LIKE ? AND pets.birth_date IS NULL"`
     );
     expect(params).toEqual([1, "%Boncuk%"]);
   });
@@ -212,5 +212,26 @@ describe("mini-orm", () => {
     const { query, params } = deleteQuery(Pet, { where: { id: 1 } });
     expect(query).toMatchInlineSnapshot(`"DELETE FROM pets WHERE id = ?"`);
     expect(params).toEqual([1]);
+  });
+
+  it("should generate select query with orderBy clause", () => {
+    const { query, params } = selectQuery(Pet, {
+      orderBy: { name: "ASC", birthDate: "DESC" },
+    });
+    expect(query).toMatchInlineSnapshot(
+      `"SELECT pets.id AS pets_id, pets.name AS pets_name, pets.birth_date AS pets_birth_date FROM pets pets ORDER BY pets.name ASC, pets.birth_date DESC"`
+    );
+    expect(params).toEqual([]);
+  });
+
+  it("should generate select query with where and orderBy clauses", () => {
+    const { query, params } = selectQuery(Pet, {
+      where: { name: "Tekir" },
+      orderBy: { birthDate: "DESC" },
+    });
+    expect(query).toMatchInlineSnapshot(
+      `"SELECT pets.id AS pets_id, pets.name AS pets_name, pets.birth_date AS pets_birth_date FROM pets pets WHERE pets.name = ? ORDER BY pets.birth_date DESC"`
+    );
+    expect(params).toEqual(["Tekir"]);
   });
 });

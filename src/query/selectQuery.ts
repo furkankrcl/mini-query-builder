@@ -1,25 +1,18 @@
 import { metadataStorage } from "../storage/MetadataStorage";
-import { buildWhereClause } from "./whereClause";
+import { buildWhereClause, WhereClause } from "./whereClause";
+
+function isFunctionFactory(
+  input: Function | (() => Function)
+): input is () => Function {
+  return typeof input === "function" && input.length === 0;
+}
 
 export function selectQuery<T extends { new (...args: any[]): {} }>(
   entityClass: T,
   options?: {
-    where?: Partial<{
-      [K in keyof InstanceType<T>]:
-        | InstanceType<T>[K]
-        | {
-            $eq?: InstanceType<T>[K];
-            $gt?: InstanceType<T>[K];
-            $lt?: InstanceType<T>[K];
-            $gte?: InstanceType<T>[K];
-            $lte?: InstanceType<T>[K];
-            $not?: InstanceType<T>[K];
-            $like?: string;
-            $null?: boolean;
-            $in?: InstanceType<T>[K][];
-          };
-    }>;
+    where?: WhereClause<InstanceType<T>>;
     relations?: string[];
+    orderBy?: Partial<Record<keyof InstanceType<T>, "ASC" | "DESC">>;
   }
 ): { query: string; params: any[] } {
   const table = metadataStorage.getTable(entityClass);
@@ -41,13 +34,14 @@ export function selectQuery<T extends { new (...args: any[]): {} }>(
       );
       if (!relation) continue;
 
-      const joinedAlias = relation.targetTable;
+      const targetClass = isFunctionFactory(relation.targetClass)
+        ? relation.targetClass()
+        : relation.targetClass;
 
-      // joined tablonun kolonlarını çekmek için metadata bulmaya çalış
-      const joinedMetadata = [...metadataStorage["tables"].values()].find(
-        (m) => m.name === relation.targetTable
-      );
+      const joinedMetadata = metadataStorage.getTable(targetClass);
       if (!joinedMetadata) continue;
+
+      const joinedAlias = relation.targetTable;
 
       // joined tablonun kolonlarını alias ile yaz
       joinColumns.push(
@@ -73,8 +67,27 @@ export function selectQuery<T extends { new (...args: any[]): {} }>(
     options?.where
   );
 
-  const query = `SELECT ${columns.join(", ")} FROM ${
-    table.name
-  } ${alias} ${joinClauses.join(" ")} ${whereClause}`;
-  return { query: query.trim(), params };
+  // ORDER BY clause
+  const orderByClauses: string[] = [];
+  if (options?.orderBy) {
+    for (const [key, direction] of Object.entries(options.orderBy)) {
+      const columnMeta = table.columns.find((col) => col.propertyKey === key);
+      if (columnMeta) {
+        orderByClauses.push(`${alias}.${columnMeta.name} ${direction}`);
+      }
+    }
+  }
+
+  const queryParts: string[] = [];
+  queryParts.push(`SELECT ${columns.join(", ")} FROM ${table.name} ${alias}`);
+  if (joinClauses.length > 0) {
+    queryParts.push(joinClauses.join(" "));
+  }
+  if (whereClause) {
+    queryParts.push(whereClause);
+  }
+  if (orderByClauses.length > 0) {
+    queryParts.push(`ORDER BY ${orderByClauses.join(", ")}`);
+  }
+  return { query: queryParts.join(" "), params };
 }

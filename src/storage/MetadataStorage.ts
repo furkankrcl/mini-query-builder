@@ -15,7 +15,7 @@ export interface RelationMetadata {
   selfReference: string;
   targetTable: string;
   targetColumn: string;
-  targetClass: Function;
+  targetClass: Function | (() => Function);
 }
 
 export interface TableMetadata {
