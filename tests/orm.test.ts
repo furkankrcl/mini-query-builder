@@ -21,15 +21,15 @@ describe("mini-orm", () => {
   it("should register OneToMany relation in metadataStorage", () => {
     const table = metadataStorage.getTable(Pet);
     expect(table.relations).toEqual([
-      {
+      expect.objectContaining({
         type: "OneToMany",
         propertyKey: "reminders",
         selfReference: "id",
         targetTable: "reminders",
         targetColumn: "pet_id",
-        targetClass: Reminder,
-      },
+      }),
     ]);
+    expect(table.relations?.[0].targetClass?.()).toBe(Reminder);
   });
   it("should generate select query with where clause and relations", () => {
     const { query, params } = selectQuery(Pet, {

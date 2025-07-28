@@ -16,7 +16,7 @@ export class Reminder extends BaseEntity {
     selfReference: "pet_id",
     targetTable: "pets",
     targetColumn: "id",
-    targetClass: Pet,
+    targetClass: () => Pet,
   })
   pet: Pet;
 }

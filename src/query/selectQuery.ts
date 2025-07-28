@@ -1,6 +1,12 @@
 import { metadataStorage } from "../storage/MetadataStorage";
 import { buildWhereClause, WhereClause } from "./whereClause";
 
+function isFunctionFactory(
+  input: Function | (() => Function)
+): input is () => Function {
+  return typeof input === "function" && input.length === 0;
+}
+
 export function selectQuery<T extends { new (...args: any[]): {} }>(
   entityClass: T,
   options?: {
@@ -28,13 +34,14 @@ export function selectQuery<T extends { new (...args: any[]): {} }>(
       );
       if (!relation) continue;
 
-      const joinedAlias = relation.targetTable;
+      const targetClass = isFunctionFactory(relation.targetClass)
+        ? relation.targetClass()
+        : relation.targetClass;
 
-      // joined tablonun kolonlarını çekmek için metadata bulmaya çalış
-      const joinedMetadata = [...metadataStorage["tables"].values()].find(
-        (m) => m.name === relation.targetTable
-      );
+      const joinedMetadata = metadataStorage.getTable(targetClass);
       if (!joinedMetadata) continue;
+
+      const joinedAlias = relation.targetTable;
 
       // joined tablonun kolonlarını alias ile yaz
       joinColumns.push(
