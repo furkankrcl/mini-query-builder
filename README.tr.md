@@ -100,7 +100,7 @@ npm run test
 
 ## 🛠 Geliştirme
 
-Bu proje TypeScript ile yazılmıştır ve hem backend hem de frontend ortamlarında kullanılmak üzere optimize edilmiştir.
+Bu proje TypeScript ile yazılmıştır ve hem backend hem de mobil (ör. React Native) ortamlarda kullanılmak üzere optimize edilmiştir.
 
 ## 📄 Lisans
 
