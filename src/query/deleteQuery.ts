@@ -14,8 +14,15 @@ export function deleteQuery<T extends { new (...args: any[]): {} }>(
   }
   const whereClause = buildWhereClause(table, true, options?.where);
 
+  const queryParts: string[] = [];
+  queryParts.push(`DELETE FROM ${table.name}`);
+
+  if (whereClause.query) {
+    queryParts.push(whereClause.query);
+  }
+
   return {
-    query: `DELETE FROM ${table.name}${whereClause.query}`,
+    query: queryParts.join(" "),
     params: whereClause.params,
   };
 }

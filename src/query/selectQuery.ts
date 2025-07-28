@@ -6,6 +6,7 @@ export function selectQuery<T extends { new (...args: any[]): {} }>(
   options?: {
     where?: WhereClause<InstanceType<T>>;
     relations?: string[];
+    orderBy?: Partial<Record<keyof InstanceType<T>, "ASC" | "DESC">>;
   }
 ): { query: string; params: any[] } {
   const table = metadataStorage.getTable(entityClass);
@@ -59,8 +60,27 @@ export function selectQuery<T extends { new (...args: any[]): {} }>(
     options?.where
   );
 
-  const query = `SELECT ${columns.join(", ")} FROM ${
-    table.name
-  } ${alias} ${joinClauses.join(" ")} ${whereClause}`;
-  return { query: query.trim(), params };
+  // ORDER BY clause
+  const orderByClauses: string[] = [];
+  if (options?.orderBy) {
+    for (const [key, direction] of Object.entries(options.orderBy)) {
+      const columnMeta = table.columns.find((col) => col.propertyKey === key);
+      if (columnMeta) {
+        orderByClauses.push(`${alias}.${columnMeta.name} ${direction}`);
+      }
+    }
+  }
+
+  const queryParts: string[] = [];
+  queryParts.push(`SELECT ${columns.join(", ")} FROM ${table.name} ${alias}`);
+  if (joinClauses.length > 0) {
+    queryParts.push(joinClauses.join(" "));
+  }
+  if (whereClause) {
+    queryParts.push(whereClause);
+  }
+  if (orderByClauses.length > 0) {
+    queryParts.push(`ORDER BY ${orderByClauses.join(", ")}`);
+  }
+  return { query: queryParts.join(" "), params };
 }

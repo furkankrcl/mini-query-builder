@@ -104,7 +104,7 @@ export function buildWhereClause<T>(
   }
 
   return {
-    query: conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "",
+    query: conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "",
     params,
   };
 }
