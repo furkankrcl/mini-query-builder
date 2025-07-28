@@ -1,9 +1,25 @@
 import { TableMetadata } from "../storage/MetadataStorage";
 
+type WhereOperator<T> = {
+  $eq?: T;
+  $gt?: T;
+  $lt?: T;
+  $gte?: T;
+  $lte?: T;
+  $not?: T;
+  $like?: string;
+  $null?: boolean;
+  $in?: T[];
+};
+
+export type WhereClause<T> = Partial<{
+  [K in keyof T]: T[K] | WhereOperator<T[K]>;
+}>;
+
 export function buildWhereClause<T>(
   table: TableMetadata,
   hideAlias = false,
-  where?: Partial<Record<keyof T, any>>
+  where?: WhereClause<T>
 ): { query: string; params: any[] } {
   if (!where) return { query: "", params: [] };
 

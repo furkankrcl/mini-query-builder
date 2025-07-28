@@ -1,24 +1,10 @@
 import { metadataStorage } from "../storage/MetadataStorage";
-import { buildWhereClause } from "./whereClause";
+import { buildWhereClause, WhereClause } from "./whereClause";
 
 export function selectQuery<T extends { new (...args: any[]): {} }>(
   entityClass: T,
   options?: {
-    where?: Partial<{
-      [K in keyof InstanceType<T>]:
-        | InstanceType<T>[K]
-        | {
-            $eq?: InstanceType<T>[K];
-            $gt?: InstanceType<T>[K];
-            $lt?: InstanceType<T>[K];
-            $gte?: InstanceType<T>[K];
-            $lte?: InstanceType<T>[K];
-            $not?: InstanceType<T>[K];
-            $like?: string;
-            $null?: boolean;
-            $in?: InstanceType<T>[K][];
-          };
-    }>;
+    where?: WhereClause<InstanceType<T>>;
     relations?: string[];
   }
 ): { query: string; params: any[] } {

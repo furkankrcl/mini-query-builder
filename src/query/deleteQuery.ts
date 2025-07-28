@@ -1,10 +1,10 @@
 import { metadataStorage } from "../storage/MetadataStorage";
-import { buildWhereClause } from "./whereClause";
+import { buildWhereClause, WhereClause } from "./whereClause";
 
 export function deleteQuery<T extends { new (...args: any[]): {} }>(
   entityClass: T,
   options?: {
-    where?: Partial<InstanceType<T>>;
+    where?: WhereClause<InstanceType<T>>;
   }
 ): { query: string; params: any[] } {
   const table = metadataStorage.getTable(entityClass);

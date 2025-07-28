@@ -1,11 +1,11 @@
 import { metadataStorage } from "../storage/MetadataStorage";
-import { buildWhereClause } from "./whereClause";
+import { buildWhereClause, WhereClause } from "./whereClause";
 
 export function updateQuery<T extends { new (...args: any[]): {} }>(
   entityClass: T,
   data: Partial<InstanceType<T>>,
   options?: {
-    where?: Partial<InstanceType<T>>;
+    where?: WhereClause<InstanceType<T>>;
   }
 ): { query: string; params: any[] } {
   const table = metadataStorage.getTable(entityClass);
