@@ -1,28 +1,62 @@
 import { metadataStorage } from "../storage/MetadataStorage";
-import { buildWhereClause, WhereClause } from "./whereClause";
+import { WhereClauseBuilder, WhereClause } from "./whereClause";
+import { IDeleteQueryBuilder, IDeleteOptions } from "./interfaces";
+import { IQueryResult, EntityClass } from "../types";
 
-export function deleteQuery<T extends { new (...args: any[]): {} }>(
+/**
+ * Enhanced DELETE query builder with SOLID principles
+ */
+export class DeleteQueryBuilder<T> implements IDeleteQueryBuilder<T> {
+  private entityClass: EntityClass<T>;
+  private whereConditions?: WhereClause<T>;
+
+  private readonly whereBuilder = new WhereClauseBuilder();
+
+  constructor(entityClass: EntityClass<T>) {
+    this.entityClass = entityClass;
+  }
+
+  where(conditions: WhereClause<T>): this {
+    this.whereConditions = conditions;
+    return this;
+  }
+
+  build(): IQueryResult {
+    const table = metadataStorage.getTable(this.entityClass);
+
+    // Build WHERE clause
+    const whereClause = this.whereBuilder.buildWithMetadata(
+      table,
+      true,
+      this.whereConditions
+    );
+
+    const queryParts: string[] = [];
+    queryParts.push(`DELETE FROM ${table.name}`);
+
+    if (whereClause.query) {
+      queryParts.push(whereClause.query);
+    }
+
+    return {
+      query: queryParts.join(" "),
+      params: whereClause.params,
+    };
+  }
+}
+
+/**
+ * Factory function for creating DELETE queries (backwards compatibility)
+ */
+export function deleteQuery<T extends EntityClass>(
   entityClass: T,
-  options?: {
-    where?: WhereClause<InstanceType<T>>;
-  }
-): { query: string; params: any[] } {
-  const table = metadataStorage.getTable(entityClass);
+  options?: IDeleteOptions<InstanceType<T>>
+): IQueryResult {
+  const builder = new DeleteQueryBuilder(entityClass);
 
-  if (!table) {
-    throw new Error("Table metadata not found for the given entity.");
-  }
-  const whereClause = buildWhereClause(table, true, options?.where);
-
-  const queryParts: string[] = [];
-  queryParts.push(`DELETE FROM ${table.name}`);
-
-  if (whereClause.query) {
-    queryParts.push(whereClause.query);
+  if (options?.where) {
+    builder.where(options.where);
   }
 
-  return {
-    query: queryParts.join(" "),
-    params: whereClause.params,
-  };
+  return builder.build();
 }

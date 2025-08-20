@@ -105,3 +105,11 @@ This project is written in TypeScript and optimized for use in both backend and 
 ## 📄 License
 
 MIT
+
+## 📚 Documentation
+
+- [v2.0 Usage Guide](docs/v2.0-usage-guide.md) - Comprehensive guide for v2.0 features and APIs
+
+## 🚀 Advanced Features (v2.0)
+
+For detailed information about advanced features, new APIs, and migration guide, please check our [v2.0 Usage Guide](docs/v2.0-usage-guide.md).

@@ -105,3 +105,11 @@ Bu proje TypeScript ile yazılmıştır ve hem backend hem de mobil (ör. React 
 ## 📄 Lisans
 
 MIT
+
+## 📚 Dokümantasyon
+
+- [v2.0 Kullanım Kılavuzu](docs/v2.0-usage-guide.tr.md) - v2.0 özellikleri ve API'leri için kapsamlı kılavuz
+
+## 🚀 Gelişmiş Özellikler (v2.0)
+
+Gelişmiş özellikler, yeni API'ler ve geçiş kılavuzu hakkında detaylı bilgi için [v2.0 Kullanım Kılavuzumuzu](docs/v2.0-usage-guide.tr.md) inceleyin.
